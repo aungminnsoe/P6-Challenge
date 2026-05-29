@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#4a7c6f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="P6 Tracker">
+<title>P6 Practice Tracker — Aung Min</title>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  
+  :root {
+    --bg: #f4f1ea;
+    --bg-card: #ffffff;
+    --ink: #2d3e3a;
+    --ink-soft: #5a6b67;
+    --sage: #7ba89c;
+    --sage-dark: #4a7c6f;
+    --sage-light: #c4dccf;
+    --sage-bg: #e8f0eb;
+    --terracotta: #c97757;
+    --terra-soft: #f4d4c2;
+    --gold: #d4a857;
+    --gold-soft: #f5e7c5;
+    --plum: #8b6b8d;
+    --plum-soft: #e8d8e8;
+    --coral: #e08571;
+    --success: #5a9f6f;
+    --shadow: 0 4px 16px rgba(45, 62, 58, 0.08);
+    --shadow-soft: 0 2px 8px rgba(45, 62, 58, 0.05);
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    font-size: 15px;
+    padding-bottom: 80px;
+    min-height: 100vh;
+  }
+  
+  /* ====== HEADER ====== */
+  .header {
+    background: linear-gradient(135deg, #4a7c6f 0%, #7ba89c 100%);
+    color: white;
+    padding: 20px 18px 18px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+  
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: -30px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+    position: relative;
+  }
+  
+  .header .subtitle {
+    font-size: 12.5px;
+    opacity: 0.95;
+    font-weight: 500;
+    position: relative;
+  }
+  
+  /* ====== STREAK BADGE ====== */
+  .streak-badge {
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .streak-badge .fire {
+    font-size: 16px;
+    animation: flicker 1.5s ease-in-out infinite alternate;
+  }
+  
+  @keyframes flicker {
+    from { transform: scale(1); }
+    to { transform: scale(1.15); }
+  }
+  
+  /* ====== OVERALL PROGRESS BAR ====== */
+  .overall-progress {
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin: 12px auto 0;
+    max-width: 320px;
+    position: relative;
+  }
+  
+  .overall-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  
+  .overall-progress-bar {
+    height: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .overall-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #d4a857, #f5e7c5);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 8px rgba(212,168,87,0.5);
+  }
+  
+  /* ====== TABS ====== */
+  .tabs-wrap {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 50;
+    padding: 10px 0 6px;
+    border-bottom: 1px solid rgba(122, 168, 156, 0.2);
+    box-shadow: 0 2px 8px rgba(45, 62, 58, 0.04);
+  }
+  
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    gap: 6px;
+    padding: 0 12px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  
+  .tabs::-webkit-scrollbar { display: none; }
+  
+  .tab {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: 20px;
+    background: var(--bg-card);
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .tab.active {
+    background: var(--sage-dark);
+    color: white;
+    box-shadow: 0 2px 8px rgba(74, 124, 111, 0.3);
+    transform: scale(1.05);
+  }
+  
+  .tab:not(.active):active {
+    background: var(--sage-bg);
+  }
+  
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 14px 16px 24px;
+  }
+  
+  /* ====== PANELS ====== */
+  .panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .panel.active {
+    display: block;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* ====== CARDS ====== */
+  .card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--sage-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .card-title .emoji {
+    font-size: 18px;
+  }
+  
+  /* ====== DASHBOARD STATS GRID ====== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  
+  .stat-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: var(--shadow-soft);
+    border-left: 3px solid var(--sage-dark);
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  
+  .stat-card:active {
+    transform: scale(0.97);
+  }
+  
+  .stat-card.terra { border-left-color: var(--terracotta); }
+  .stat-card.gold { border-left-color: var(--gold); }
+  .stat-card.plum { border-left-color: var(--plum); }
+  
+  .stat-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  
+  .stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--sage-dark);
+    line-height: 1.1;
+  }
+  
+  .stat-card.terra .stat-value { color: var(--terracotta); }
+  .stat-card.gold .stat-value { color: #b88a3a; }
+  .stat-card.plum .stat-value { color: var(--plum); }
+  
+  .stat-label {
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  
+  .stat-subtitle {
+    font-size: 10px;
+    color: var(--ink-soft);
+    opacity: 0.8;
+  }
+  
+  /* ====== PROGRESS BARS ====== */
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+  }
+  
+  .progress-label {
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 90px;
+    color: var(--ink-soft);
+  }
+  
+  .progress-bar {
+    flex: 1;
+    height: 12px;
+    background: var(--sage-bg);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--sage), var(--sage-dark));
+    border-radius: 6px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
+  .progress-value {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sage-dark);
+    min-width: 40px;
+    text-align: right;
+  }
+  
+  /* ====== CHECKABLE ITEMS ====== */
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow-soft);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  
+  .check-item:active {
+    transform: scale(0.98);
+  }
+  
+  .check-item.completed {
+    background: var(--sage-bg);
+    border-left-color: var(--success);
+  }
+  
+  .check-item.completed .check-text {
+    text-decoration: line-through;
+    color: var(--ink-soft);
+    opacity: 0.7;
+  }
+  
+  .checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--sage-light);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    transition: all 0.2s;
+    margin-top: 1px;
+  }
+  
+  .check-item.completed .checkbox {
+    background: var(--success);
+    border-color: var(--success);
+    transform: rotate(360deg);
+  }
+  
+  .checkbox-check {
+    color: white;
+    font-size: 14px;
+    font-weight: 800;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  
+  .check-item.completed .checkbox-check {
+    opacity: 1;
+  }
+  
+  .check-content {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .check-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  
+  .check-text {
+    font-size: 13.5px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  
+  .check-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  
+  .chip {
+    background: var(--sage-bg);
+    color: var(--sage-dark);
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
+  
+  .chip.gold {
+    background: var(--gold-soft);
+    color: #8a6a25;
+  }
+  
+  .chip.terra {
+    background: var(--terra-soft);
+    color: #8b3a1e;
+  }
+  
+  .chip.plum {
+    background: var(--plum-soft);
+    color: var(--plum);
+  }
+  
+  /* ====== WEEK CARDS ====== */
+  .week-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-soft);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .week-card:active {
+    transform: scale(0.98);
+  }
+  
+  .week-card.completed {
+    background: linear-gradient(135deg, #e8f0eb 0%, #f5e7c5 100%);
+  }
+  
+  .week-card.current {
+    background: linear-gradient(135deg, #fff8e1 0%, #fffbf0 100%);
+    border: 2px solid var(--gold);
+  }
+  
+  .week-card.current::before {
+    content: '⭐ CURRENT';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--gold);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  
+  .week-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  
+  .week-number {
+    background: var(--sage-dark);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  
+  .week-card.completed .week-number {
+    background: var(--success);
+  }
+  
+  .week-content {
+    flex: 1;
+    margin-left: 12px;
+  }
+  
+  .week-focus {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .week-goal {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  
+  .week-card-tasks {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    display: none;
+  }
+  
+  .week-card.expanded .week-card-tasks {
+    display: block;
+  }
+  
+  .week-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  
+  .week-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  
+  /* ====== PROJECT CARDS ====== */
+  .project-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    border-top: 4px solid var(--sage-dark);
+  }
+  
+  .project-card.completed {
+    border-top-color: var(--success);
+    background: linear-gradient(135deg, #ffffff 0%, #e8f0eb 100%);
+  }
+  
+  .project-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .project-num {
+    background: linear-gradient(135deg, var(--sage-dark), var(--plum));
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(74, 124, 111, 0.3);
+  }
+  
+  .project-info {
+    flex: 1;
+  }
+  
+  .project-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  
+  .project-type {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-top: 1px;
+  }
+  
+  .project-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin: 10px 0;
+  }
+  
+  .pstat {
+    background: var(--sage-bg);
+    border-radius: 10px;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .pstat-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sage-dark);
+  }
+  
+  .pstat-label {
+    font-size: 10px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  
+  .project-skill {
+    background: var(--gold-soft);
+    color: #8a6a25;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin: 8px 0;
+    font-weight: 600;
+  }
+  
+  .project-checklist {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    display: none;
+  }
+  
+  .project-card.expanded .project-checklist {
+    display: block;
+  }
+  
+  .project-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  
+  .project-checklist-item .mini-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 2px solid var(--sage-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: white;
+  }
+  
+  .project-checklist-item.done .mini-checkbox {
+    background: var(--success);
+    border-color: var(--success);
+  }
+  
+  .project-checklist-item.done .mini-checkbox::after {
+    content: '✓';
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  
+  .project-checklist-item.done {
+    color: var(--ink-soft);
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+  
+  .project-progress {
+    margin-top: 10px;
+  }
+  
+  .project-expand-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--sage-bg);
+    color: var(--sage-dark);
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  
+  .project-expand-btn:active {
+    background: var(--sage-light);
+  }
+  
+  /* ====== DAILY LOG ====== */
+  .log-form {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  
+  .form-group {
+    margin-bottom: 12px;
+  }
+  
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--sage-light);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--bg);
+    transition: border-color 0.2s;
+  }
+  
+  .form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--sage-dark);
+  }
+  
+  .form-textarea {
+    min-height: 60px;
+    resize: vertical;
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  
+  .btn {
+    background: var(--sage-dark);
+    color: white;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(74, 124, 111, 0.3);
+  }
+  
+  .btn:active {
+    transform: scale(0.96);
+  }
+  
+  .btn.secondary {
+    background: var(--bg-card);
+    color: var(--sage-dark);
+    border: 1.5px solid var(--sage-light);
+    box-shadow: none;
+  }
+  
+  .btn.terra {
+    background: var(--terracotta);
+  }
+  
+  .btn.gold {
+    background: var(--gold);
+  }
+  
+  .log-entry {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow-soft);
+    border-left: 3px solid var(--sage);
+    position: relative;
+  }
+  
+  .log-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  
+  .log-entry-date {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sage-dark);
+  }
+  
+  .log-entry-hours {
+    background: var(--gold-soft);
+    color: #8a6a25;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  
+  .log-entry-project {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  
+  .log-entry-notes {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  
+  .log-entry-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--terracotta);
+    cursor: pointer;
+    font-size: 16px;
+    opacity: 0.5;
+  }
+  
+  /* ====== EMPTY STATE ====== */
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--ink-soft);
+  }
+  
+  .empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+  }
+  
+  .empty-state-text {
+    font-size: 13px;
+  }
+  
+  /* ====== ACHIEVEMENTS ====== */
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+  }
+  
+  .achievement {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s;
+    opacity: 0.4;
+    filter: grayscale(0.8);
+  }
+  
+  .achievement.unlocked {
+    opacity: 1;
+    filter: none;
+    background: linear-gradient(135deg, var(--gold-soft), var(--sage-bg));
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(212, 168, 87, 0.3);
+  }
+  
+  .achievement-icon {
+    font-size: 30px;
+    margin-bottom: 4px;
+  }
+  
+  .achievement-name {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  
+  .achievement-desc {
+    font-size: 9px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  
+  /* ====== RESOURCE CARDS ====== */
+  .resource-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow-soft);
+    border-left: 3px solid var(--sage);
+  }
+  
+  .resource-card.priority-5 { border-left-color: var(--gold); background: linear-gradient(to right, var(--gold-soft), white); }
+  
+  .resource-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  
+  .resource-desc {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  
+  .resource-link {
+    display: inline-block;
+    margin-top: 6px;
+    color: var(--sage-dark);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  
+  /* ====== CONFETTI ====== */
+  .confetti {
+    position: fixed;
+    top: -10px;
+    width: 8px;
+    height: 8px;
+    z-index: 9999;
+    pointer-events: none;
+    border-radius: 50%;
+  }
+  
+  /* ====== TOAST ====== */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--sage-dark);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(74, 124, 111, 0.4);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    max-width: 90%;
+    text-align: center;
+  }
+  
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+  }
+  
+  .toast.success { background: var(--success); }
+  .toast.gold { background: var(--gold); }
+  .toast.error { background: var(--terracotta); }
+  
+  /* ====== EXPORT/IMPORT BAR ====== */
+  .data-bar {
+    position: fixed;
+    bottom: 14px;
+    right: 14px;
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+  }
+  
+  .data-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--sage-dark);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(74, 124, 111, 0.4);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .data-btn.gold {
+    background: var(--gold);
+    box-shadow: 0 4px 12px rgba(212, 168, 87, 0.4);
+  }
+  
+  /* ====== CHALLENGE CARDS ====== */
+  .challenge-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-soft);
+    border-left: 4px solid var(--plum);
+    cursor: pointer;
+  }
+  
+  .challenge-card.completed {
+    background: linear-gradient(to right, var(--plum-soft), white);
+    border-left-color: var(--success);
+  }
+  
+  .challenge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+  
+  .challenge-week {
+    font-size: 11px;
+    color: var(--plum);
+    font-weight: 700;
+  }
+  
+  .challenge-time {
+    background: var(--plum-soft);
+    color: var(--plum);
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  
+  .challenge-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  
+  .challenge-goal {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  
+  .challenge-skill {
+    font-size: 11px;
+    color: var(--sage-dark);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+  
+  /* ====== MOTIVATIONAL QUOTE ====== */
+  .quote-card {
+    background: linear-gradient(135deg, var(--sage-dark) 0%, var(--plum) 100%);
+    color: white;
+    padding: 18px;
+    border-radius: 14px;
+    margin: 14px 0;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  
+  .quote-text {
+    font-size: 14px;
+    font-style: italic;
+    line-height: 1.6;
+    margin-bottom: 6px;
+  }
+  
+  .quote-author {
+    font-size: 11px;
+    opacity: 0.85;
+    font-weight: 600;
+  }
+  
+  /* ====== SMALL SCREENS ====== */
+  @media (max-width: 380px) {
+    body { font-size: 14px; }
+    .header h1 { font-size: 19px; }
+    .tab { font-size: 12px; padding: 7px 12px; }
+    .stats-grid { gap: 8px; }
+    .stat-value { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>🏗️ P6 Practice Tracker</h1>
+  <div class="subtitle">Aung Min · 90-Day Skill Journey</div>
+  <div class="streak-badge" onclick="showStreakInfo()">
+    <span class="fire">🔥</span>
+    <span id="streakDisplay">0 day streak</span>
+  </div>
+  <div class="overall-progress">
+    <div class="overall-progress-label">
+      <span>Overall Progress</span>
+      <span id="overallProgressText">0%</span>
+    </div>
+    <div class="overall-progress-bar">
+      <div class="overall-progress-fill" id="overallProgressFill" style="width: 0%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrap">
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-panel="dashboard">📊 Dashboard</div>
+    <div class="tab" data-panel="weeks">📅 12 Weeks</div>
+    <div class="tab" data-panel="projects">🏗️ Projects</div>
+    <div class="tab" data-panel="challenges">⚡ Challenges</div>
+    <div class="tab" data-panel="log">📔 Daily Log</div>
+    <div class="tab" data-panel="achievements">🏆 Achievements</div>
+    <div class="tab" data-panel="resources">📚 Resources</div>
+    <div class="tab" data-panel="portfolio">💼 Portfolio</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- DASHBOARD -->
+  <div class="panel active" id="panel-dashboard">
+    <div class="quote-card">
+      <div class="quote-text" id="dailyQuote">"Confidence comes from REPETITION, not training. You've done the training. Now stack the reps."</div>
+      <div class="quote-author">— Your future self, congratulating you</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card" onclick="switchTab('weeks')">
+        <div class="stat-icon">📅</div>
+        <div class="stat-value" id="weeksDone">0/12</div>
+        <div class="stat-label">Weeks Done</div>
+      </div>
+      <div class="stat-card terra" onclick="switchTab('projects')">
+        <div class="stat-icon">🏗️</div>
+        <div class="stat-value" id="projectsDone">0/5</div>
+        <div class="stat-label">Projects Built</div>
+      </div>
+      <div class="stat-card gold" onclick="switchTab('log')">
+        <div class="stat-icon">⏰</div>
+        <div class="stat-value" id="totalHours">0</div>
+        <div class="stat-label">Total Hours</div>
+        <div class="stat-subtitle">Target: 90</div>
+      </div>
+      <div class="stat-card plum" onclick="switchTab('challenges')">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-value" id="challengesDone">0/8</div>
+        <div class="stat-label">Challenges</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">🎯</span> Progress Breakdown</div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-label">Weeks</div>
+        <div class="progress-bar"><div class="progress-fill" id="weeksProgress" style="width: 0%"></div></div>
+        <div class="progress-value" id="weeksProgressText">0%</div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-label">Projects</div>
+        <div class="progress-bar"><div class="progress-fill" id="projectsProgress" style="width: 0%"></div></div>
+        <div class="progress-value" id="projectsProgressText">0%</div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-label">Hours</div>
+        <div class="progress-bar"><div class="progress-fill" id="hoursProgress" style="width: 0%"></div></div>
+        <div class="progress-value" id="hoursProgressText">0%</div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-label">Challenges</div>
+        <div class="progress-bar"><div class="progress-fill" id="challengesProgress" style="width: 0%"></div></div>
+        <div class="progress-value" id="challengesProgressText">0%</div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-label">Portfolio</div>
+        <div class="progress-bar"><div class="progress-fill" id="portfolioProgress" style="width: 0%"></div></div>
+        <div class="progress-value" id="portfolioProgressText">0%</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">⏰</span> Quick Log Today</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Hours practiced today</label>
+          <input type="number" class="form-input" id="quickHours" placeholder="0.5" step="0.25" min="0">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn gold" onclick="quickLog()">+ Log it</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">📅</span> This Week's Focus</div>
+      </div>
+      <div id="currentWeekFocus" style="font-size: 14px; line-height: 1.6;">
+        <div class="empty-state">
+          <div class="empty-state-icon">🚀</div>
+          <div class="empty-state-text">Start week 1 to see your focus area here!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEKS -->
+  <div class="panel" id="panel-weeks">
+    <div class="card" style="background: linear-gradient(135deg, var(--sage-bg), var(--gold-soft));">
+      <div class="card-title"><span class="emoji">📅</span> 12-Week Plan</div>
+      <p style="font-size: 13px; color: var(--ink-soft); margin-top: 6px;">
+        Tap a week to expand. Mark complete when done. 6-8 hours/week target.
+      </p>
+    </div>
+    <div id="weeksList"></div>
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="panel" id="panel-projects">
+    <div class="card" style="background: linear-gradient(135deg, var(--terra-soft), var(--bg-card));">
+      <div class="card-title"><span class="emoji">🏗️</span> 5 Portfolio Projects</div>
+      <p style="font-size: 13px; color: var(--ink-soft); margin-top: 6px;">
+        Build each project with the 20-step checklist. Track hours and progress.
+      </p>
+    </div>
+    <div id="projectsList"></div>
+  </div>
+
+  <!-- CHALLENGES -->
+  <div class="panel" id="panel-challenges">
+    <div class="card" style="background: linear-gradient(135deg, var(--plum-soft), var(--bg-card));">
+      <div class="card-title"><span class="emoji">⚡</span> Weekly Skill Challenges</div>
+      <p style="font-size: 13px; color: var(--ink-soft); margin-top: 6px;">
+        One challenge per week to build a specific advanced skill. Tap to mark done.
+      </p>
+    </div>
+    <div id="challengesList"></div>
+  </div>
+
+  <!-- DAILY LOG -->
+  <div class="panel" id="panel-log">
+    <div class="log-form">
+      <div class="card-title" style="margin-bottom: 12px;"><span class="emoji">✍️</span> Log Today's Practice</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input type="date" class="form-input" id="logDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hours</label>
+          <input type="number" class="form-input" id="logHours" placeholder="1.5" step="0.25" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Project / Topic</label>
+        <input type="text" class="form-input" id="logProject" placeholder="e.g., Project 1: Residential house WBS">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes (what I did, what I learned)</label>
+        <textarea class="form-textarea" id="logNotes" placeholder="Built EPS structure, added 30 activities, learned about activity types..."></textarea>
+      </div>
+      <button class="btn" onclick="addLogEntry()">+ Add Entry</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">📋</span> Recent Entries <span id="entryCount" style="font-size:12px;color:var(--ink-soft);font-weight:500;">(0)</span></div>
+      </div>
+      <div id="logEntriesList">
+        <div class="empty-state">
+          <div class="empty-state-icon">📝</div>
+          <div class="empty-state-text">No entries yet. Log your first practice session above!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="panel" id="panel-achievements">
+    <div class="card" style="background: linear-gradient(135deg, var(--gold-soft), var(--bg-card));">
+      <div class="card-title"><span class="emoji">🏆</span> Unlock Achievements</div>
+      <p style="font-size: 13px; color: var(--ink-soft); margin-top: 6px;">
+        Earn badges as you progress. 12 achievements to unlock!
+      </p>
+    </div>
+    <div class="achievements-grid" id="achievementsGrid"></div>
+  </div>
+
+  <!-- RESOURCES -->
+  <div class="panel" id="panel-resources">
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 12px;"><span class="emoji">🎬</span> Free YouTube Channels</div>
+      <div id="ytResources"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 12px;"><span class="emoji">💰</span> Recommended Courses</div>
+      <div id="courseResources"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 12px;"><span class="emoji">📂</span> Free Practice Files</div>
+      <div id="fileResources"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 12px;"><span class="emoji">🛠️</span> Software & Tools</div>
+      <div id="toolResources"></div>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO -->
+  <div class="panel" id="panel-portfolio">
+    <div class="card" style="background: linear-gradient(135deg, var(--sage-bg), var(--gold-soft));">
+      <div class="card-title"><span class="emoji">💼</span> Interview-Ready Portfolio</div>
+      <p style="font-size: 13px; color: var(--ink-soft); margin-top: 6px;">
+        Build these assets to stand out in international applications.
+      </p>
+    </div>
+    <div id="portfolioSections"></div>
+  </div>
+
+</div>
+
+<!-- DATA EXPORT/IMPORT BUTTONS -->
+<div class="data-bar">
+  <button class="data-btn gold" onclick="exportData()" title="Backup progress">💾</button>
+  <button class="data-btn" onclick="document.getElementById('importFile').click()" title="Restore backup">📂</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA — All Static Content
+// ============================================================
+
+const WEEKS_DATA = [
+  { week: 1, focus: 'Refresh & Setup', goal: 'Empty project structure with calendars', tasks: 'Day 1: Install P6 trial\nDay 2-3: Re-watch interface basics\nDay 4-5: Practice navigation\nDay 6-7: Set up EPS/OBS', hours: 6 },
+  { week: 2, focus: 'WBS & Activities', goal: 'Activities defined for Project 1', tasks: 'Day 1-3: Build WBS for residential house\nDay 4-5: Add 30 activities\nDay 6-7: Set activity types & codes', hours: 7 },
+  { week: 3, focus: 'Logic & Critical Path', goal: 'Project 1 schedule complete with CP', tasks: 'Day 1-3: Add FS, SS, FF relationships\nDay 4-5: Run schedule, find critical path\nDay 6-7: Adjust durations', hours: 7 },
+  { week: 4, focus: 'Resources & Costs', goal: '✅ PROJECT 1 COMPLETE: Residential house', tasks: 'Day 1-2: Create resource pool\nDay 3-4: Assign resources\nDay 5-6: Cost loading\nDay 7: Baseline + screenshots', hours: 8 },
+  { week: 5, focus: 'Multi-Story Build', goal: 'Project 2 framework built', tasks: 'Day 1-3: WBS for 5-story building\nDay 4-7: Add 100+ activities, set logic', hours: 8 },
+  { week: 6, focus: 'Updates & Variances', goal: '✅ PROJECT 2 COMPLETE: 5-story apartment', tasks: 'Day 1-3: Simulate weekly updates\nDay 4-5: Practice statusing\nDay 6-7: Variance analysis', hours: 8 },
+  { week: 7, focus: 'Infrastructure Project', goal: 'Project 3 framework built', tasks: 'Day 1-3: Linear scheduling for 2km road\nDay 4-7: Equipment resources, weather constraints', hours: 7 },
+  { week: 8, focus: 'Resource Leveling', goal: '✅ PROJECT 3 COMPLETE: Road construction', tasks: 'Day 1-3: Practice resource leveling\nDay 4-5: Histograms\nDay 6-7: Optimize Project 3', hours: 8 },
+  { week: 9, focus: 'MEP Coordination', goal: 'Project 4 framework built', tasks: 'Day 1-3: Multi-trade scheduling\nDay 4-7: Interface management for warehouse', hours: 8 },
+  { week: 10, focus: 'EVM & Reporting', goal: '✅ PROJECT 4 COMPLETE: Warehouse with MEP', tasks: 'Day 1-3: Set up EVM in P6\nDay 4-5: CPI, SPI, EAC calculations\nDay 6-7: Generate reports', hours: 8 },
+  { week: 11, focus: 'Complex Project + Crashing', goal: 'Project 5 framework built', tasks: 'Day 1-3: Hospital wing scheduling\nDay 4-5: Crashing & fast-tracking\nDay 6-7: Multiple baselines', hours: 8 },
+  { week: 12, focus: 'Portfolio & Polish', goal: '✅ PROJECT 5 COMPLETE + Portfolio Ready', tasks: 'Day 1-3: Finish Project 5\nDay 4-5: Record demo videos\nDay 6-7: Update CV/LinkedIn', hours: 7 }
+];
+
+const PROJECTS_DATA = [
+  { id: 1, name: '1-Bedroom Residential House', type: 'Building', activities: '25-40', duration: '3 months', skill: 'Basic scheduling, WBS, critical path' },
+  { id: 2, name: '5-Story Apartment Building', type: 'Multi-story', activities: '75-120', duration: '8 months', skill: 'Parallel workfronts, resource conflicts, cost loading' },
+  { id: 3, name: '2km Road Construction', type: 'Infrastructure', activities: '100-150', duration: '6 months', skill: 'Linear scheduling, weather constraints, resource leveling' },
+  { id: 4, name: 'Warehouse with MEP', type: 'Industrial', activities: '150-250', duration: '10 months', skill: 'Interface mgmt, procurement, phased handovers' },
+  { id: 5, name: 'Hospital Wing', type: 'Complex hybrid', activities: '250-400', duration: '18 months', skill: 'EVM, multiple baselines, crashing/fast-tracking' }
+];
+
+const PROJECT_CHECKLIST = [
+  'Create project in P6 with proper naming',
+  'Set project calendar (5-day, 6-day, etc.)',
+  'Build EPS / OBS structure',
+  'Develop WBS with 3-4 levels',
+  'Add all activities with IDs and codes',
+  'Set activity types (Task, Resource, etc.)',
+  'Add logic relationships (FS, SS, FF) with lags',
+  'Run schedule, verify critical path',
+  'Create resource pool',
+  'Assign resources to activities',
+  'Cost-load activities',
+  'Run resource leveling',
+  'Save baseline (Baseline 1)',
+  'Simulate 4 progress updates',
+  'Calculate variances, generate EVM',
+  'Generate Gantt + S-curve + histogram',
+  'Export reports as PDF',
+  'Take screenshots for portfolio',
+  'Write 1-page project summary',
+  'Add project to LinkedIn'
+];
+
+const CHALLENGES_DATA = [
+  { week: 1, title: 'Speed Building', goal: 'Build a 50-activity schedule in 90 minutes', skill: 'Speed & interface confidence', time: '1.5h' },
+  { week: 2, title: 'Logic Puzzle', goal: 'Take a 100-activity schedule with broken logic and fix it', skill: 'Schedule quality review', time: '2h' },
+  { week: 3, title: 'Recovery Scenario', goal: 'Project is 4 weeks behind — develop recovery plan in P6', skill: 'Real-world recovery scheduling', time: '3h' },
+  { week: 4, title: 'Resource Crunch', goal: 'Schedule has 200% over-allocation — level it', skill: 'Resource leveling techniques', time: '2.5h' },
+  { week: 5, title: 'Multiple Baselines', goal: 'Track 4 baselines and explain variances', skill: 'Schedule control discipline', time: '3h' },
+  { week: 6, title: 'EVM Report', goal: 'Generate full EVM report (CPI, SPI, EAC, ETC, VAC)', skill: 'Performance measurement', time: '2.5h' },
+  { week: 7, title: 'Crash + Fast-Track', goal: 'Recover 3 weeks via crashing + fast-tracking', skill: 'Schedule compression', time: '3h' },
+  { week: 8, title: 'Client Report', goal: 'Generate beautiful 5-page progress report from P6', skill: 'Reporting and presentation', time: '3h' }
+];
+
+const ACHIEVEMENTS_DATA = [
+  { id: 'first_log', icon: '🎯', name: 'First Step', desc: 'Log your first practice session', check: (d) => d.logs.length >= 1 },
+  { id: 'three_day_streak', icon: '🔥', name: 'On Fire', desc: '3-day streak', check: (d) => d.streak >= 3 },
+  { id: 'week_warrior', icon: '⚡', name: 'Week Warrior', desc: 'Complete 1 full week', check: (d) => d.weeks.filter(w => w).length >= 1 },
+  { id: 'first_project', icon: '🏗️', name: 'Project Pioneer', desc: 'Complete first project', check: (d) => d.projects.some(p => p.checklist.every(c => c)) },
+  { id: 'ten_hours', icon: '⏰', name: '10-Hour Club', desc: 'Log 10+ hours', check: (d) => totalHours(d) >= 10 },
+  { id: 'halfway', icon: '🎖️', name: 'Halfway Hero', desc: 'Complete 6 weeks', check: (d) => d.weeks.filter(w => w).length >= 6 },
+  { id: 'fifty_hours', icon: '💪', name: 'Practice Beast', desc: 'Log 50+ hours', check: (d) => totalHours(d) >= 50 },
+  { id: 'challenge_champ', icon: '🌟', name: 'Challenge Champ', desc: 'Complete 4 challenges', check: (d) => d.challenges.filter(c => c).length >= 4 },
+  { id: 'three_projects', icon: '🏆', name: 'Triple Crown', desc: 'Complete 3 projects', check: (d) => d.projects.filter(p => p.checklist.every(c => c)).length >= 3 },
+  { id: 'ninety_hours', icon: '🚀', name: '90-Hour Master', desc: 'Hit 90 hours total', check: (d) => totalHours(d) >= 90 },
+  { id: 'all_projects', icon: '👑', name: 'Portfolio King', desc: 'Complete all 5 projects', check: (d) => d.projects.every(p => p.checklist.every(c => c)) },
+  { id: 'job_ready', icon: '🎓', name: 'Job Ready', desc: 'Complete entire 90-day plan', check: (d) => d.weeks.every(w => w) && d.projects.every(p => p.checklist.every(c => c)) }
+];
+
+const YT_RESOURCES = [
+  { name: 'Plan Academy (Michael Lepage)', desc: 'Best free P6 tutorials anywhere — very clear explanations', priority: 5, link: 'https://www.youtube.com/@PlanAcademy' },
+  { name: 'Planning Engineer Khaled', desc: 'Construction-focused, BOQ-driven examples', priority: 5, link: 'https://www.youtube.com/results?search_query=planning+engineer+khaled+primavera' },
+  { name: 'Engineer Hassaan (dRMR)', desc: 'Civil engineer perspective, very practical', priority: 4, link: 'https://www.youtube.com/results?search_query=engineer+hassaan+primavera' },
+  { name: 'Engineer Sajjad', desc: 'Step-by-step easy walkthroughs', priority: 4, link: 'https://www.youtube.com/results?search_query=engineer+sajjad+primavera+p6' },
+  { name: 'Construction Tuts', desc: 'Real construction case studies', priority: 3, link: 'https://www.youtube.com/results?search_query=construction+tuts+primavera' }
+];
+
+const COURSE_RESOURCES = [
+  { name: 'Primavera P6 for Civil Engineers Masterclass', desc: 'Best match for your BE Civil background', priority: 5, link: 'https://www.udemy.com/course/primavera-p6-planning-for-civil-engineers-and-construction/' },
+  { name: 'Primavera P6 Professional Masterclass', desc: 'Live residential project (10 Marla House)', priority: 4, link: 'https://www.udemy.com/course/primavera-p6-professional-beginner-to-expert/' },
+  { name: 'P6 Basic to Advanced (24 PDUs)', desc: 'Includes PMP renewal PDU credits', priority: 4, link: 'https://www.udemy.com/course/primavera-p6-project-planning-scheduling-basic-to-advanced/' }
+];
+
+const FILE_RESOURCES = [
+  { name: 'Plan Academy', desc: 'Free sample XER files', priority: 5, link: 'https://www.planacademy.com' },
+  { name: 'World Bank Project Docs', desc: 'Real project schedules from infrastructure projects', priority: 4, link: 'https://documents.worldbank.org' },
+  { name: 'ADB Project Portal', desc: 'Asian infrastructure schedules', priority: 4, link: 'https://www.adb.org/projects' },
+  { name: 'AusTender', desc: 'Real Australian tender BOQs & schedules', priority: 4, link: 'https://www.tenders.gov.au' },
+  { name: 'Your past projects', desc: 'Best source! Build schedules from real experience', priority: 5, link: '#' }
+];
+
+const TOOL_RESOURCES = [
+  { name: 'Primavera P6 Professional', desc: 'FREE 60-day trial from Oracle', priority: 5, link: 'https://edelivery.oracle.com' },
+  { name: 'OBS Studio', desc: 'FREE screen recording for portfolio videos', priority: 4, link: 'https://obsproject.com' },
+  { name: 'LinkedIn', desc: 'Portfolio sharing platform', priority: 4, link: 'https://www.linkedin.com' },
+  { name: 'YouTube (Unlisted)', desc: 'Host demo videos privately', priority: 4, link: 'https://www.youtube.com' }
+];
+
+const PORTFOLIO_SECTIONS = [
+  {
+    title: '📄 PDF Portfolio Document',
+    color: 'sage',
+    items: [
+      'Cover page with name, PMP, BE Civil',
+      'Index of 5 projects with one-line description',
+      'Project 1 page: Gantt + 1 page summary',
+      'Project 2 page: Gantt + S-curve + summary',
+      'Project 3 page: Resource histogram + summary',
+      'Project 4 page: Network logic + summary',
+      'Project 5 page: EVM report + summary',
+      'Skills page (P6 features mastered)',
+      'Save as polished PDF, max 15 pages'
+    ]
+  },
+  {
+    title: '🎬 YouTube Demo Videos',
+    color: 'terra',
+    items: [
+      'Set up unlisted YouTube channel',
+      "Video 1: 'Building residential schedule from scratch' (10 min)",
+      "Video 2: 'Updating construction schedule weekly' (8 min)",
+      "Video 3: 'Earned Value reporting in P6' (10 min)",
+      "Bonus: 'Resource leveling case study' (5-7 min)",
+      "Bonus: 'Recovering delayed project — crashing' (8 min)"
+    ]
+  },
+  {
+    title: '💼 LinkedIn Optimization',
+    color: 'plum',
+    items: [
+      "Headline: 'PMP-Certified Construction PM | BE Civil | Primavera P6'",
+      'About section rewritten with achievements',
+      'Add Primavera P6 to skills',
+      'Get 3+ skill endorsements',
+      'Post Project 1 with screenshots',
+      'Post Project 2 with screenshots',
+      'Post Project 3 — challenge solved',
+      'Post Project 4 — lesson learned',
+      'Post Project 5 — most complex work',
+      'Use hashtags: #PrimaveraP6 #ConstructionPM',
+      'Connect with 50+ recruiters / construction PMs'
+    ]
+  },
+  {
+    title: '📝 CV / Resume Updates',
+    color: 'gold',
+    items: [
+      'Add PMP credential to header',
+      'Add Primavera P6 to skills',
+      'Add 2-3 quantified P6 achievements',
+      'Mention portfolio availability',
+      'Include LinkedIn URL',
+      'Tailored version for Canada (NOC 70010)',
+      'Tailored version for Australia (ANZSCO 133111)',
+      'Tailored version for NZ (Skill Shortage)'
+    ]
+  },
+  {
+    title: '🎤 Interview Prep',
+    color: 'sage',
+    items: [
+      "Memorize the 'Yes I have P6 experience' answer",
+      'Practice walking through Project 1 in 3 min',
+      'Practice walking through Project 5 in 5 min',
+      'Prepare 3 stories: challenge, recovery, lesson',
+      'Have portfolio PDF ready to share',
+      'Have unlisted YouTube link ready',
+      'Practice 5 common P6 interview questions'
+    ]
+  }
+];
+
+const QUOTES = [
+  "Confidence comes from REPETITION, not training. You've done the training. Now stack the reps.",
+  "Interview confidence comes from EVIDENCE, not credentials. Build the portfolio.",
+  "You're already 60% of the way there. Now just put in the hours.",
+  "30 minutes a day for 12 weeks = international career change.",
+  "Don't wait for a job that uses P6 to practice. Practice now, the job will follow.",
+  "Every small daily step compounds into massive momentum.",
+  "Future you will thank present you for not skipping today.",
+  "The best time to start was yesterday. The second best time is right now.",
+  "You're not behind. You're exactly where you need to be to start.",
+  "A portfolio of 5 self-built projects beats any certificate."
+];
+
+// ============================================================
+// STATE MANAGEMENT
+// ============================================================
+
+const STORAGE_KEY = 'p6_tracker_data_v1';
+
+function getDefaultData() {
+  return {
+    weeks: new Array(12).fill(false),
+    weeksExpanded: new Array(12).fill(false),
+    projects: PROJECTS_DATA.map(() => ({ 
+      checklist: new Array(20).fill(false),
+      expanded: false 
+    })),
+    challenges: new Array(8).fill(false),
+    logs: [],
+    portfolio: PORTFOLIO_SECTIONS.map(s => new Array(s.items.length).fill(false)),
+    streak: 0,
+    lastLogDate: null,
+    unlockedAchievements: []
+  };
+}
+
+let data = loadData();
+
+function loadData() {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Ensure all fields exist with defaults
+      const defaults = getDefaultData();
+      return { ...defaults, ...parsed };
+    }
+  } catch(e) { console.warn('Could not load saved data:', e); }
+  return getDefaultData();
+}
+
+function saveData() {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch(e) { 
+    console.warn('Could not save data:', e);
+    showToast('Could not save. Storage may be full.', 'error');
+  }
+}
+
+function totalHours(d = data) {
+  return (d.logs || []).reduce((sum, log) => sum + parseFloat(log.hours || 0), 0);
+}
+
+// ============================================================
+// UI UPDATES
+// ============================================================
+
+function updateDashboard() {
+  const weeksDone = data.weeks.filter(w => w).length;
+  const projectsCompleted = data.projects.filter(p => p.checklist.every(c => c)).length;
+  const hours = totalHours();
+  const challengesDone = data.challenges.filter(c => c).length;
+  const portfolioTotal = PORTFOLIO_SECTIONS.reduce((sum, s) => sum + s.items.length, 0);
+  const portfolioDone = data.portfolio.reduce((sum, arr) => sum + arr.filter(v => v).length, 0);
+
+  document.getElementById('weeksDone').textContent = weeksDone + '/12';
+  document.getElementById('projectsDone').textContent = projectsCompleted + '/5';
+  document.getElementById('totalHours').textContent = hours.toFixed(1);
+  document.getElementById('challengesDone').textContent = challengesDone + '/8';
+
+  const weekPct = (weeksDone / 12) * 100;
+  const projPct = (projectsCompleted / 5) * 100;
+  const hoursPct = Math.min((hours / 90) * 100, 100);
+  const chalPct = (challengesDone / 8) * 100;
+  const portPct = (portfolioDone / portfolioTotal) * 100;
+  const overall = (weekPct + projPct + hoursPct + chalPct + portPct) / 5;
+
+  setProgress('weeksProgress', 'weeksProgressText', weekPct);
+  setProgress('projectsProgress', 'projectsProgressText', projPct);
+  setProgress('hoursProgress', 'hoursProgressText', hoursPct);
+  setProgress('challengesProgress', 'challengesProgressText', chalPct);
+  setProgress('portfolioProgress', 'portfolioProgressText', portPct);
+
+  document.getElementById('overallProgressFill').style.width = overall + '%';
+  document.getElementById('overallProgressText').textContent = Math.round(overall) + '%';
+  document.getElementById('streakDisplay').textContent = data.streak + ' day streak';
+
+  // Current week focus
+  const currentWeek = data.weeks.findIndex(w => !w);
+  const focusEl = document.getElementById('currentWeekFocus');
+  if (currentWeek === -1) {
+    focusEl.innerHTML = `<div style="text-align:center; padding:20px;"><div style="font-size:36px;">🎉</div><div style="font-weight:700; color:var(--success); margin-top:8px;">ALL 12 WEEKS COMPLETE!</div><div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">You're job-ready. Time to apply!</div></div>`;
+  } else {
+    const w = WEEKS_DATA[currentWeek];
+    focusEl.innerHTML = `
+      <div style="background: var(--gold-soft); padding: 12px; border-radius: 10px; margin-bottom: 10px;">
+        <div style="font-size: 11px; font-weight: 700; color: #8a6a25;">WEEK ${w.week} — ${w.hours} hrs target</div>
+        <div style="font-size: 16px; font-weight: 700; margin: 4px 0;">${w.focus}</div>
+        <div style="font-size: 12.5px; color: var(--ink-soft);">${w.goal}</div>
+      </div>
+      <div style="font-size: 12.5px; line-height: 1.6; color: var(--ink-soft);">${w.tasks.replace(/\n/g, '<br>')}</div>
+    `;
+  }
+}
+
+function setProgress(barId, textId, pct) {
+  document.getElementById(barId).style.width = pct + '%';
+  document.getElementById(textId).textContent = Math.round(pct) + '%';
+}
+
+function renderWeeks() {
+  const container = document.getElementById('weeksList');
+  const currentWeek = data.weeks.findIndex(w => !w);
+  container.innerHTML = WEEKS_DATA.map((w, i) => {
+    const completed = data.weeks[i];
+    const isCurrent = i === currentWeek && !completed;
+    const expanded = data.weeksExpanded[i];
+    return `
+      <div class="week-card ${completed ? 'completed' : ''} ${isCurrent ? 'current' : ''} ${expanded ? 'expanded' : ''}" 
+           data-week="${i}">
+        <div style="display:flex; align-items:flex-start;">
+          <div class="week-number">${w.week}</div>
+          <div class="week-content">
+            <div class="week-focus">${w.focus}</div>
+            <div class="week-goal">${w.goal}</div>
+          </div>
+        </div>
+        <div class="week-card-tasks">${w.tasks.replace(/\n/g, '<br>')}</div>
+        <div class="week-card-footer">
+          <div class="week-toggle">
+            <span class="chip gold">${w.hours} hours</span>
+            <span onclick="event.stopPropagation(); toggleWeekExpand(${i})" style="color: var(--sage-dark); font-weight: 600; cursor:pointer; padding:4px;">
+              ${expanded ? '▲ Less' : '▼ Details'}
+            </span>
+          </div>
+          <div class="checkbox" onclick="event.stopPropagation(); toggleWeek(${i})">
+            <span class="checkbox-check">✓</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // Apply completed state to checkboxes
+  WEEKS_DATA.forEach((w, i) => {
+    const card = container.querySelector(`[data-week="${i}"]`);
+    if (data.weeks[i]) {
+      card.querySelector('.checkbox').classList.add('completed');
+      card.classList.add('completed');
+    }
+  });
+}
+
+function toggleWeek(idx) {
+  data.weeks[idx] = !data.weeks[idx];
+  saveData();
+  renderWeeks();
+  updateDashboard();
+  checkAchievements();
+  if (data.weeks[idx]) {
+    celebrate();
+    showToast(`Week ${idx+1} complete! 🎉`, 'success');
+  }
+}
+
+function toggleWeekExpand(idx) {
+  data.weeksExpanded[idx] = !data.weeksExpanded[idx];
+  saveData();
+  renderWeeks();
+}
+
+function renderProjects() {
+  const container = document.getElementById('projectsList');
+  container.innerHTML = PROJECTS_DATA.map((p, i) => {
+    const done = data.projects[i].checklist.filter(c => c).length;
+    const total = 20;
+    const pct = (done / total) * 100;
+    const allDone = done === total;
+    const expanded = data.projects[i].expanded;
+    return `
+      <div class="project-card ${allDone ? 'completed' : ''} ${expanded ? 'expanded' : ''}">
+        <div class="project-header">
+          <div class="project-num">${p.id}</div>
+          <div class="project-info">
+            <div class="project-name">${p.name}</div>
+            <div class="project-type">${p.type}</div>
+          </div>
+        </div>
+        <div class="project-stats">
+          <div class="pstat">
+            <div class="pstat-value">${p.activities}</div>
+            <div class="pstat-label">Activities</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-value">${p.duration}</div>
+            <div class="pstat-label">Duration</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-value">${done}/${total}</div>
+            <div class="pstat-label">Steps Done</div>
+          </div>
+        </div>
+        <div class="project-skill">🎯 ${p.skill}</div>
+        <div class="project-progress">
+          <div class="progress-row" style="margin: 4px 0;">
+            <div class="progress-bar"><div class="progress-fill" style="width: ${pct}%; background: ${allDone ? 'linear-gradient(90deg, var(--success), var(--gold))' : ''};"></div></div>
+            <div class="progress-value">${Math.round(pct)}%</div>
+          </div>
+        </div>
+        <button class="project-expand-btn" onclick="toggleProjectExpand(${i})">
+          ${expanded ? '▲ Hide Checklist' : '▼ Show 20-Step Checklist'}
+        </button>
+        <div class="project-checklist">
+          ${PROJECT_CHECKLIST.map((task, j) => `
+            <div class="project-checklist-item ${data.projects[i].checklist[j] ? 'done' : ''}" onclick="toggleProjectStep(${i}, ${j})">
+              <div class="mini-checkbox"></div>
+              <div>${task}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleProjectStep(pIdx, sIdx) {
+  data.projects[pIdx].checklist[sIdx] = !data.projects[pIdx].checklist[sIdx];
+  saveData();
+  renderProjects();
+  updateDashboard();
+  checkAchievements();
+  
+  // Check if project completed
+  if (data.projects[pIdx].checklist.every(c => c)) {
+    celebrate();
+    showToast(`Project ${pIdx+1} complete! 🏆`, 'gold');
+  }
+}
+
+function toggleProjectExpand(idx) {
+  data.projects[idx].expanded = !data.projects[idx].expanded;
+  saveData();
+  renderProjects();
+}
+
+function renderChallenges() {
+  const container = document.getElementById('challengesList');
+  container.innerHTML = CHALLENGES_DATA.map((c, i) => `
+    <div class="challenge-card ${data.challenges[i] ? 'completed' : ''}" onclick="toggleChallenge(${i})">
+      <div class="challenge-header">
+        <div class="challenge-week">WEEK ${c.week}</div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="challenge-time">${c.time}</span>
+          <div class="checkbox" style="width:20px;height:20px;">
+            <span class="checkbox-check">✓</span>
+          </div>
+        </div>
+      </div>
+      <div class="challenge-title">⚡ ${c.title}</div>
+      <div class="challenge-goal">${c.goal}</div>
+      <div class="challenge-skill">→ ${c.skill}</div>
+    </div>
+  `).join('');
+  
+  // Mark completed
+  CHALLENGES_DATA.forEach((c, i) => {
+    if (data.challenges[i]) {
+      const card = container.querySelectorAll('.challenge-card')[i];
+      card.querySelector('.checkbox').classList.add('completed');
+    }
+  });
+}
+
+function toggleChallenge(idx) {
+  data.challenges[idx] = !data.challenges[idx];
+  saveData();
+  renderChallenges();
+  updateDashboard();
+  checkAchievements();
+  if (data.challenges[idx]) {
+    celebrate();
+    showToast(`Challenge complete! ⚡`, 'success');
+  }
+}
+
+function renderLogs() {
+  const container = document.getElementById('logEntriesList');
+  document.getElementById('entryCount').textContent = `(${data.logs.length})`;
+  
+  if (data.logs.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <div class="empty-state-text">No entries yet. Log your first practice session above!</div>
+      </div>
+    `;
+    return;
+  }
+  
+  const sorted = [...data.logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+  container.innerHTML = sorted.map((log, i) => {
+    const realIdx = data.logs.indexOf(log);
+    return `
+      <div class="log-entry">
+        <button class="log-entry-delete" onclick="deleteLog(${realIdx})">✕</button>
+        <div class="log-entry-header">
+          <div class="log-entry-date">${formatDate(log.date)}</div>
+          <div class="log-entry-hours">${log.hours} hrs</div>
+        </div>
+        ${log.project ? `<div class="log-entry-project">${log.project}</div>` : ''}
+        ${log.notes ? `<div class="log-entry-notes">${log.notes}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function addLogEntry() {
+  const date = document.getElementById('logDate').value || new Date().toISOString().split('T')[0];
+  const hours = parseFloat(document.getElementById('logHours').value);
+  const project = document.getElementById('logProject').value.trim();
+  const notes = document.getElementById('logNotes').value.trim();
+  
+  if (!hours || hours <= 0) {
+    showToast('Please enter valid hours', 'error');
+    return;
+  }
+  
+  data.logs.push({ date, hours, project, notes });
+  updateStreak(date);
+  saveData();
+  
+  // Clear form
+  document.getElementById('logHours').value = '';
+  document.getElementById('logProject').value = '';
+  document.getElementById('logNotes').value = '';
+  
+  renderLogs();
+  updateDashboard();
+  renderAchievements();
+  checkAchievements();
+  celebrate();
+  showToast(`Logged ${hours} hours! Total: ${totalHours().toFixed(1)} 💪`, 'success');
+}
+
+function quickLog() {
+  const hours = parseFloat(document.getElementById('quickHours').value);
+  if (!hours || hours <= 0) {
+    showToast('Enter hours first', 'error');
+    return;
+  }
+  const date = new Date().toISOString().split('T')[0];
+  data.logs.push({ date, hours, project: 'Quick log', notes: '' });
+  updateStreak(date);
+  saveData();
+  document.getElementById('quickHours').value = '';
+  updateDashboard();
+  renderAchievements();
+  checkAchievements();
+  celebrate();
+  showToast(`+${hours} hours logged! 💪`, 'success');
+}
+
+function deleteLog(idx) {
+  if (confirm('Delete this entry?')) {
+    data.logs.splice(idx, 1);
+    saveData();
+    renderLogs();
+    updateDashboard();
+  }
+}
+
+function updateStreak(dateStr) {
+  const today = dateStr;
+  if (data.lastLogDate === today) {
+    return;
+  }
+  
+  const lastDate = data.lastLogDate ? new Date(data.lastLogDate) : null;
+  const todayDate = new Date(today);
+  
+  if (!lastDate) {
+    data.streak = 1;
+  } else {
+    const diff = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+    if (diff === 1) {
+      data.streak += 1;
+    } else if (diff > 1) {
+      data.streak = 1;
+    }
+  }
+  data.lastLogDate = today;
+}
+
+function renderAchievements() {
+  const container = document.getElementById('achievementsGrid');
+  container.innerHTML = ACHIEVEMENTS_DATA.map(a => {
+    const unlocked = data.unlockedAchievements.includes(a.id);
+    return `
+      <div class="achievement ${unlocked ? 'unlocked' : ''}">
+        <div class="achievement-icon">${a.icon}</div>
+        <div class="achievement-name">${a.name}</div>
+        <div class="achievement-desc">${a.desc}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function checkAchievements() {
+  let newUnlocks = [];
+  ACHIEVEMENTS_DATA.forEach(a => {
+    if (!data.unlockedAchievements.includes(a.id) && a.check(data)) {
+      data.unlockedAchievements.push(a.id);
+      newUnlocks.push(a);
+    }
+  });
+  
+  if (newUnlocks.length > 0) {
+    saveData();
+    renderAchievements();
+    setTimeout(() => {
+      newUnlocks.forEach((a, i) => {
+        setTimeout(() => {
+          showToast(`${a.icon} Achievement unlocked: ${a.name}!`, 'gold');
+          celebrate();
+        }, i * 1500);
+      });
+    }, 500);
+  }
+}
+
+function renderResources() {
+  document.getElementById('ytResources').innerHTML = YT_RESOURCES.map(r => renderResource(r)).join('');
+  document.getElementById('courseResources').innerHTML = COURSE_RESOURCES.map(r => renderResource(r)).join('');
+  document.getElementById('fileResources').innerHTML = FILE_RESOURCES.map(r => renderResource(r)).join('');
+  document.getElementById('toolResources').innerHTML = TOOL_RESOURCES.map(r => renderResource(r)).join('');
+}
+
+function renderResource(r) {
+  const stars = '⭐'.repeat(r.priority);
+  return `
+    <div class="resource-card priority-${r.priority}">
+      <div class="resource-name">${r.name} <span style="font-size:11px;">${stars}</span></div>
+      <div class="resource-desc">${r.desc}</div>
+      ${r.link && r.link !== '#' ? `<a href="${r.link}" target="_blank" rel="noopener" class="resource-link">Open link →</a>` : ''}
+    </div>
+  `;
+}
+
+function renderPortfolio() {
+  const container = document.getElementById('portfolioSections');
+  container.innerHTML = PORTFOLIO_SECTIONS.map((s, sIdx) => `
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 10px;">${s.title}</div>
+      ${s.items.map((item, iIdx) => `
+        <div class="check-item ${data.portfolio[sIdx][iIdx] ? 'completed' : ''}" onclick="togglePortfolioItem(${sIdx}, ${iIdx})">
+          <div class="checkbox"><span class="checkbox-check">✓</span></div>
+          <div class="check-content"><div class="check-text">${item}</div></div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function togglePortfolioItem(sIdx, iIdx) {
+  data.portfolio[sIdx][iIdx] = !data.portfolio[sIdx][iIdx];
+  saveData();
+  renderPortfolio();
+  updateDashboard();
+}
+
+// ============================================================
+// CELEBRATIONS
+// ============================================================
+
+function celebrate() {
+  const colors = ['#4a7c6f', '#d4a857', '#c97757', '#8b6b8d', '#7ba89c'];
+  for (let i = 0; i < 30; i++) {
+    setTimeout(() => {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + '%';
+      confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+      document.body.appendChild(confetti);
+      
+      const duration = 2000 + Math.random() * 1000;
+      const horizontal = (Math.random() - 0.5) * 200;
+      
+      confetti.animate([
+        { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+        { transform: `translate(${horizontal}px, 100vh) rotate(720deg)`, opacity: 0 }
+      ], {
+        duration: duration,
+        easing: 'cubic-bezier(0.4, 0.0, 0.2, 1)'
+      });
+      
+      setTimeout(() => confetti.remove(), duration);
+    }, i * 30);
+  }
+}
+
+function showToast(message, type = '') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast ' + type;
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function showStreakInfo() {
+  const streak = data.streak;
+  if (streak === 0) {
+    showToast('Log a session today to start your streak!', '');
+  } else {
+    showToast(`🔥 ${streak} day streak! Keep going!`, 'gold');
+  }
+}
+
+// ============================================================
+// TABS
+// ============================================================
+
+function switchTab(panelName) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab[data-panel="${panelName}"]`)?.classList.add('active');
+  document.getElementById('panel-' + panelName)?.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  // Scroll active tab into view
+  document.querySelector(`.tab[data-panel="${panelName}"]`)?.scrollIntoView({ 
+    behavior: 'smooth', 
+    block: 'nearest', 
+    inline: 'center' 
+  });
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    switchTab(tab.dataset.panel);
+  });
+});
+
+// Week cards click handler (delegated)
+document.getElementById('weeksList').addEventListener('click', (e) => {
+  const card = e.target.closest('.week-card');
+  if (card && !e.target.closest('.checkbox') && !e.target.closest('.week-toggle')) {
+    const idx = parseInt(card.dataset.week);
+    toggleWeekExpand(idx);
+  }
+});
+
+// ============================================================
+// DATA EXPORT / IMPORT
+// ============================================================
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const date = new Date().toISOString().split('T')[0];
+  a.download = `p6_tracker_backup_${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded! 💾', 'success');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (confirm('Replace current progress with backup? This cannot be undone.')) {
+        data = { ...getDefaultData(), ...imported };
+        saveData();
+        renderAll();
+        showToast('Backup restored! 🎉', 'success');
+      }
+    } catch (err) {
+      showToast('Invalid backup file', 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+function renderAll() {
+  updateDashboard();
+  renderWeeks();
+  renderProjects();
+  renderChallenges();
+  renderLogs();
+  renderAchievements();
+  renderResources();
+  renderPortfolio();
+}
+
+// Set today's date as default
+document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
+
+// Random quote
+document.getElementById('dailyQuote').textContent = '"' + QUOTES[Math.floor(Math.random() * QUOTES.length)] + '"';
+
+// Initial render
+renderAll();
+checkAchievements();
+
+// Console welcome
+console.log('%c🏗️ P6 Practice Tracker', 'font-size: 24px; font-weight: bold; color: #4a7c6f;');
+console.log('%cBuilt for Aung Min — Stay consistent, win the future! 💪', 'color: #c97757; font-size: 14px;');
+</script>
+
+</body>
+</html>
