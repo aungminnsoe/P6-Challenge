@@ -1180,6 +1180,7 @@
     <div class="tab" data-panel="achievements">🏆 Achievements</div>
     <div class="tab" data-panel="resources">📚 Resources</div>
     <div class="tab" data-panel="portfolio">💼 Portfolio</div>
+    <div class="tab" data-panel="basis">📐 Basis of Schedule</div>
   </div>
 </div>
 
@@ -1392,6 +1393,26 @@
     <div id="portfolioSections"></div>
   </div>
 
+  <!-- BASIS OF SCHEDULE -->
+  <div class="panel" id="panel-basis">
+    <div class="card" style="background: linear-gradient(135deg, var(--sage-bg), var(--terra-soft));">
+      <div class="card-title"><span class="emoji">📐</span> Basis of Schedule</div>
+      <p style="font-size: 13px; color: var(--ink-soft); margin-top: 6px;">
+        The narrative that turns a Gantt chart into proof of planning judgment. Fill one per project — sections 8 &amp; 9 (basis of durations &amp; sequencing logic) are what interviewers read closest.
+      </p>
+    </div>
+    <div class="basis-toolbar">
+      <select class="basis-select" id="basisProject" onchange="switchBasisProject(this.value)"></select>
+      <button class="basis-mini-btn" onclick="addBasisProject()">+ New</button>
+      <button class="basis-mini-btn" onclick="generateBasisMarkdown()">⎘ Narrative</button>
+    </div>
+    <div class="basis-progress-row">
+      <div class="basis-bar"><i id="basisBarFill"></i></div>
+      <span class="basis-bar-label" id="basisBarLabel">0% complete</span>
+    </div>
+    <div id="basisForm"></div>
+  </div>
+
 </div>
 
 <!-- DATA EXPORT/IMPORT BUTTONS -->
@@ -1399,6 +1420,51 @@
   <button class="data-btn gold" onclick="exportData()" title="Backup progress">💾</button>
   <button class="data-btn" onclick="document.getElementById('importFile').click()" title="Restore backup">📂</button>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+</div>
+
+<style>
+  /* ===== Basis of Schedule module ===== */
+  .basis-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .basis-select{appearance:none;background:var(--bg-card);border:1.5px solid var(--sage-light);border-radius:10px;padding:9px 14px;font-weight:600;color:var(--ink);font-size:13px;flex:1;min-width:150px}
+  .basis-mini-btn{background:var(--bg-card);border:1.5px solid var(--sage-light);border-radius:10px;padding:9px 12px;font-weight:600;font-size:13px;color:var(--sage-dark);cursor:pointer}
+  .basis-mini-btn:active{background:var(--sage-bg)}
+  .basis-progress-row{display:flex;align-items:center;gap:10px;margin:2px 0 14px}
+  .basis-bar{flex:1;height:9px;border-radius:6px;background:var(--sage-bg);overflow:hidden}
+  .basis-bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sage-dark),var(--gold));transition:width .4s ease;box-shadow:0 0 8px rgba(212,168,87,.4)}
+  .basis-bar-label{font-size:12px;font-weight:700;color:var(--sage-dark);min-width:118px;text-align:right;font-variant-numeric:tabular-nums}
+  .basis-num{display:inline-block;background:var(--sage-bg);color:var(--sage-dark);font-weight:800;font-size:11.5px;border-radius:6px;padding:2px 7px;margin-right:7px;vertical-align:middle}
+  .basis-hint{font-size:12px;color:var(--ink-soft);margin:0 0 10px;border-left:3px solid var(--sage-light);padding-left:9px;line-height:1.45}
+  .basis-star{color:var(--terracotta);font-weight:800}
+  table.basis-rows{width:100%;border-collapse:collapse}
+  table.basis-rows th{font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);text-align:left;padding:0 5px 5px;font-weight:700}
+  table.basis-rows td{padding:0 5px 7px;vertical-align:top}
+  table.basis-rows input{width:100%;border:1.5px solid var(--sage-light);border-radius:8px;padding:7px 9px;font-size:13px;font-family:inherit;color:var(--ink)}
+  table.basis-rows input:focus{outline:none;border-color:var(--sage-dark)}
+  .basis-delrow{background:none;border:none;color:var(--terracotta);font-size:18px;cursor:pointer;padding:2px 6px;line-height:1}
+  .basis-addrow{background:var(--sage-bg);color:var(--sage-dark);border:1px dashed var(--sage-light);border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;margin-top:6px}
+  .basis-modal{position:fixed;inset:0;background:rgba(45,62,58,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:200}
+  .basis-modal.open{display:flex}
+  .basis-modal .box{background:var(--bg-card);border-radius:16px;max-width:680px;width:100%;max-height:84vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .basis-modal .box header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--sage-bg)}
+  .basis-modal .box header b{color:var(--sage-dark);font-size:15px}
+  .basis-modal textarea{flex:1;border:none;padding:14px 16px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.5;background:var(--bg);resize:none;min-height:280px;color:var(--ink)}
+  .basis-modal .acts{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--sage-bg);flex-wrap:wrap;align-items:center}
+  .basis-x{background:none;border:none;font-size:22px;color:var(--ink-soft);cursor:pointer}
+</style>
+
+<!-- BASIS NARRATIVE MODAL -->
+<div class="basis-modal" id="basisModal">
+  <div class="box">
+    <header><b>Portfolio narrative (Markdown)</b><button class="basis-x" onclick="closeBasisModal()">×</button></header>
+    <textarea id="basisMdOut" readonly></textarea>
+    <div class="acts">
+      <button class="btn" style="width:auto" onclick="copyBasisMd()">Copy</button>
+      <button class="basis-mini-btn" onclick="downloadBasisMd()">Download .md</button>
+      <button class="basis-mini-btn" onclick="printBasis()">Printable / PDF</button>
+      <span style="flex:1"></span>
+      <button class="basis-mini-btn" onclick="closeBasisModal()">Close</button>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -1616,8 +1682,167 @@ function getDefaultData() {
     portfolio: PORTFOLIO_SECTIONS.map(s => new Array(s.items.length).fill(false)),
     streak: 0,
     lastLogDate: null,
-    unlockedAchievements: []
+    unlockedAchievements: [],
+    basis: getDefaultBasis()
   };
+}
+
+// ============================================================
+// BASIS OF SCHEDULE MODULE
+// ============================================================
+const BASIS_DOC_FIELDS = [
+  {k:"scheduleId",  l:"Schedule ID / Filename", ph:"P1_Residential_Rev0.xer"},
+  {k:"revision",    l:"Revision", ph:"Rev 0"},
+  {k:"dataDate",    l:"Data Date", ph:"e.g. 01-Jul-2026"},
+  {k:"preparedBy",  l:"Prepared by", ph:"Aung Min Soe"},
+  {k:"datePrepared",l:"Date prepared", ph:""},
+  {k:"p6version",   l:"P6 version", ph:"Primavera P6 Professional 24.12"}
+];
+const BASIS_SECTIONS = [
+  {n:2,k:"purpose",l:"Purpose & Scope of the Schedule",t:"area",h:"What this schedule covers and what it's used for (baseline programme, progress control). One short paragraph."},
+  {n:3,k:"description",l:"Project Description",t:"area",h:"What is being built, where, key parameters (storeys, area, length, capacity). Show you understand the work physically."},
+  {n:4,k:"milestones",l:"Key Milestones",t:"table",cols:["Milestone","Type","Target Date"],h:"Project start, key phase handovers, practical completion. Note overall planned duration."},
+  {n:5,k:"scopeBasis",l:"Scope Basis (Reference Documents)",t:"area",h:"Inputs the schedule is built from: drawings, BOQ/scope, specs, assumed methodology — name realistic sources."},
+  {n:6,k:"wbs",l:"Work Breakdown Structure (WBS)",t:"area",h:"How the WBS is organised (phase / discipline / area) and WHY that structure suits this project."},
+  {n:7,k:"calendars",l:"Calendars & Working Hours",t:"area",h:"Work pattern (e.g. 6 days/week, 8 hrs), holidays, weather/shift assumptions baked into calendars."},
+  {n:8,k:"durations",l:"Activity Definition & Basis of Durations",t:"area",h:"<span class='basis-star'>★</span> Level of detail and HOW durations were derived — productivity rates, crew sizes, BOQ quantities, experience. This separates planners from chart-drawers."},
+  {n:9,k:"logic",l:"Logic & Sequencing Rationale",t:"area",h:"<span class='basis-star'>★</span> The heart of the document. Narrate the construction sequence: what drives what and why. Justify significant SS/FF overlaps and lags with real-world reasons."},
+  {n:10,k:"criticalPath",l:"Critical Path",t:"area",h:"Describe the critical path in plain language and WHY it runs through those activities. Note total float on near-critical paths."},
+  {n:11,k:"resourceLoading",l:"Resource & Cost Loading Basis",t:"area",h:"(Resource-loaded projects) What was loaded, the rate basis, resulting peak demands. Reference histogram & S-curve."},
+  {n:12,k:"assumptions",l:"Assumptions",t:"area",h:"Resource availability, no major redesign, permits on time, single shift, etc. Explicit assumptions = credibility."},
+  {n:13,k:"constraints",l:"Constraints",t:"area",h:"Imposed dates / constraints applied in P6 and the justification for each. Note constraints are minimised on purpose."},
+  {n:14,k:"exclusions",l:"Exclusions",t:"area",h:"What the schedule deliberately does NOT cover (procurement lead times, off-site fabrication, snagging)."},
+  {n:15,k:"risks",l:"Schedule Risks & Mitigation",t:"table",cols:["Risk","Likely Impact","Mitigation / Float Strategy"],h:"Top schedule risks and how float or sequencing mitigates them."},
+  {n:16,k:"maintenance",l:"Schedule Maintenance & Updating",t:"area",h:"Update cycle (e.g. monthly data date), how progress is captured (% complete type), how the baseline is preserved for variance analysis."}
+];
+const BASIS_PROGRESS_KEYS = [...BASIS_DOC_FIELDS.map(f=>f.k), ...BASIS_SECTIONS.map(s=>s.k)];
+
+function defaultBasisProject(name){
+  return { name,
+    doc:{ preparedBy:"Aung Min Soe", p6version:"Primavera P6 Professional 24.12", revision:"Rev 0" },
+    fields:{},
+    tables:{ milestones:[["","",""]], risks:[["","",""]], revisions:[["0","","Initial baseline","AMS"]] } };
+}
+function getDefaultBasis(){
+  return { active:"P1", projects:{
+    "P1": defaultBasisProject("Project 1 — Residential (logic only)"),
+    "P2": defaultBasisProject("Project 2 — Resource-loaded"),
+    "P3": defaultBasisProject("Project 3 — Full lifecycle"),
+    "DLY":defaultBasisProject("Delay Analysis — EOT")
+  } };
+}
+function curBasis(){
+  if(!data.basis) data.basis = getDefaultBasis();
+  if(!data.basis.projects[data.basis.active]) data.basis.active = Object.keys(data.basis.projects)[0];
+  return data.basis.projects[data.basis.active];
+}
+
+function basisEsc(s){return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function basisSlug(s){return (s||"project").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,40);}
+function basisBlob(txt,name,mime){const b=new Blob([txt],{type:mime});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
+
+function renderBasis(){ if(!data.basis) data.basis=getDefaultBasis(); renderBasisSelect(); renderBasisForm(); }
+function renderBasisSelect(){
+  const sel=document.getElementById("basisProject"); if(!sel)return; sel.innerHTML="";
+  Object.entries(data.basis.projects).forEach(([id,p])=>{ const o=document.createElement("option"); o.value=id; o.textContent=p.name; if(id===data.basis.active)o.selected=true; sel.appendChild(o); });
+}
+function renderBasisForm(){
+  const p=curBasis(); let h="";
+  h+=`<div class="card"><div class="card-title" style="margin-bottom:10px"><span class="basis-num">01</span>Document Control</div>
+    <div class="form-group"><label class="form-label">Project name <span class="basis-star">*</span></label>
+    <input class="form-input" value="${basisEsc(p.name)}" oninput="setBasisName(this.value)" placeholder="Shown in the selector"></div>`;
+  BASIS_DOC_FIELDS.forEach(f=>{ const v=(p.doc&&p.doc[f.k])||"";
+    h+=`<div class="form-group"><label class="form-label">${f.l}</label>
+      <input class="form-input" value="${basisEsc(v)}" oninput="setBasisDoc('${f.k}',this.value)" placeholder="${basisEsc(f.ph)}"></div>`; });
+  h+=`</div>`;
+  BASIS_SECTIONS.forEach(s=>{
+    h+=`<div class="card"><div class="card-title" style="margin-bottom:8px"><span class="basis-num">${String(s.n).padStart(2,'0')}</span>${s.l}</div>
+      <p class="basis-hint">${s.h}</p>`;
+    if(s.t==="table"){ h+=renderBasisTable(s); }
+    else { const v=(p.fields&&p.fields[s.k])||""; h+=`<textarea class="form-textarea" oninput="setBasisField('${s.k}',this.value)" placeholder="Write here…">${basisEsc(v)}</textarea>`; }
+    h+=`</div>`;
+  });
+  h+=`<div class="card"><div class="card-title" style="margin-bottom:8px"><span class="basis-num">17</span>Revision History</div>
+    <p class="basis-hint">Track revisions as you re-baseline. Rev 0 = initial baseline.</p>${renderBasisTable({k:"revisions",cols:["Rev","Date","Description","By"]})}</div>`;
+  document.getElementById("basisForm").innerHTML=h;
+  updateBasisProgress();
+}
+function renderBasisTable(s){
+  const p=curBasis();
+  if(!p.tables[s.k]) p.tables[s.k]= (s.k==="revisions")?[["0","","Initial baseline","AMS"]]:[s.cols.map(()=> "")];
+  let h=`<table class="basis-rows"><thead><tr>${s.cols.map(c=>`<th>${c}</th>`).join("")}<th></th></tr></thead><tbody>`;
+  p.tables[s.k].forEach((row,ri)=>{
+    h+=`<tr>${s.cols.map((c,ci)=>`<td><input value="${basisEsc(row[ci]||"")}" oninput="setBasisCell('${s.k}',${ri},${ci},this.value)"></td>`).join("")}<td><button class="basis-delrow" title="Remove" onclick="delBasisRow('${s.k}',${ri})">×</button></td></tr>`;
+  });
+  h+=`</tbody></table><button class="basis-addrow" onclick="addBasisRow('${s.k}',${s.cols.length})">+ Add row</button>`;
+  return h;
+}
+function setBasisName(v){ curBasis().name=v; saveData(); renderBasisSelect(); }
+function setBasisDoc(k,v){ const p=curBasis(); p.doc=p.doc||{}; p.doc[k]=v; saveData(); updateBasisProgress(); }
+function setBasisField(k,v){ const p=curBasis(); p.fields=p.fields||{}; p.fields[k]=v; saveData(); updateBasisProgress(); }
+function setBasisCell(tk,ri,ci,v){ curBasis().tables[tk][ri][ci]=v; saveData(); updateBasisProgress(); }
+function addBasisRow(tk,n){ curBasis().tables[tk].push(new Array(n).fill("")); saveData(); renderBasisForm(); }
+function delBasisRow(tk,ri){ const t=curBasis().tables[tk]; t.splice(ri,1); if(!t.length)t.push([]); saveData(); renderBasisForm(); }
+function switchBasisProject(id){ data.basis.active=id; saveData(); renderBasisForm(); }
+function addBasisProject(){ const name=prompt("New project name:","Project — "); if(!name)return; const id="P"+Date.now().toString(36); data.basis.projects[id]=defaultBasisProject(name); data.basis.active=id; saveData(); renderBasisSelect(); renderBasisForm(); showToast("Project added 🏗️","success"); }
+function updateBasisProgress(){
+  const p=curBasis(); let filled=0; const total=BASIS_PROGRESS_KEYS.length;
+  BASIS_PROGRESS_KEYS.forEach(k=>{
+    if(BASIS_DOC_FIELDS.some(f=>f.k===k)){ if(p.doc&&(p.doc[k]||"").trim())filled++; }
+    else if(k==="milestones"||k==="risks"){ if((p.tables[k]||[]).some(r=>r.some(c=>(c||"").trim())))filled++; }
+    else { if(p.fields&&(p.fields[k]||"").trim())filled++; }
+  });
+  const pct=Math.round(filled/total*100);
+  const fill=document.getElementById("basisBarFill"); if(fill)fill.style.width=pct+"%";
+  const lab=document.getElementById("basisBarLabel"); if(lab)lab.textContent=pct+"% · "+filled+"/"+total;
+}
+function generateBasisMarkdown(){
+  const p=curBasis(); const d=p.doc||{}; const fl=p.fields||{};
+  let m=`# Basis of Schedule — ${p.name}\n\n## 1. Document Control\n\n| Field | Detail |\n|---|---|\n| Project | ${p.name} |\n`;
+  BASIS_DOC_FIELDS.forEach(f=>{ m+=`| ${f.l} | ${(d[f.k]||"").trim()} |\n`; });
+  m+=`\n`;
+  BASIS_SECTIONS.forEach(s=>{
+    m+=`## ${s.n}. ${s.l}\n\n`;
+    if(s.t==="table"){
+      m+=`| ${s.cols.join(" | ")} |\n|${s.cols.map(()=>"---").join("|")}|\n`;
+      (p.tables[s.k]||[]).forEach(r=>{ if(r.some(c=>(c||"").trim())) m+=`| ${s.cols.map((_,i)=>r[i]||"").join(" | ")} |\n`; });
+      m+=`\n`;
+    } else { m+=`${(fl[s.k]||"").trim()||"_(to complete)_"}\n\n`; }
+  });
+  m+=`## 17. Revision History\n\n| Rev | Date | Description | By |\n|---|---|---|---|\n`;
+  (p.tables.revisions||[]).forEach(r=>{ if(r.some(c=>(c||"").trim())) m+=`| ${[0,1,2,3].map(i=>r[i]||"").join(" | ")} |\n`; });
+  document.getElementById("basisMdOut").value=m;
+  document.getElementById("basisModal").classList.add("open");
+}
+function closeBasisModal(){ document.getElementById("basisModal").classList.remove("open"); }
+function copyBasisMd(){ const t=document.getElementById("basisMdOut"); t.select(); (navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(()=>showToast("Copied 📋","success")).catch(()=>{document.execCommand("copy");showToast("Copied 📋","success");}); }
+function downloadBasisMd(){ basisBlob(document.getElementById("basisMdOut").value, basisSlug(curBasis().name)+"_basis_of_schedule.md","text/markdown"); showToast("Downloaded 💾","success"); }
+function basisMdToHtml(md){
+  const lines=md.split("\n"); let out=""; let i=0;
+  const cells=r=>r.split("|").slice(1,-1).map(c=>c.trim());
+  while(i<lines.length){
+    const ln=lines[i];
+    if(/^# /.test(ln)){ out+=`<h1>${basisEsc(ln.slice(2))}</h1>`; i++; continue; }
+    if(/^## /.test(ln)){ out+=`<h2>${basisEsc(ln.slice(3))}</h2>`; i++; continue; }
+    if(/^\|/.test(ln)){
+      const tbl=[]; while(i<lines.length && /^\|/.test(lines[i])){ tbl.push(lines[i]); i++; }
+      let t="<table><tr>"+cells(tbl[0]).map(c=>`<th>${basisEsc(c)}</th>`).join("")+"</tr>";
+      for(let r=2;r<tbl.length;r++){ t+="<tr>"+cells(tbl[r]).map(c=>`<td>${basisEsc(c)}</td>`).join("")+"</tr>"; }
+      out+=t+"</table>"; continue;
+    }
+    if(ln.trim()===""){ i++; continue; }
+    let para=ln; i++;
+    while(i<lines.length && lines[i].trim()!=="" && !/^[#|]/.test(lines[i])){ para+=" "+lines[i]; i++; }
+    out+=`<p>${basisEsc(para).replace(/_\(to complete\)_/g,'<em>(to complete)</em>')}</p>`;
+  }
+  return out;
+}
+function printBasis(){
+  const md=document.getElementById("basisMdOut").value;
+  const w=window.open("","_blank");
+  if(!w){ showToast("Allow pop-ups to print","error"); return; }
+  w.document.write(`<html><head><title>${basisEsc(curBasis().name)} — Basis of Schedule</title><style>body{font-family:Georgia,'Times New Roman',serif;max-width:760px;margin:32px auto;padding:0 22px;color:#26302d;line-height:1.55}h1{font-size:24px;border-bottom:2px solid #4a7c6f;padding-bottom:8px}h2{font-size:16px;color:#4a7c6f;margin-top:22px}table{border-collapse:collapse;width:100%;margin:8px 0}th,td{border:1px solid #c9c9c9;padding:6px 9px;text-align:left;font-size:13px}th{background:#eef4f1}p{margin:8px 0}</style></head><body>${basisMdToHtml(md)}</body></html>`);
+  w.document.close(); setTimeout(()=>w.print(),350);
 }
 
 let data = loadData();
@@ -2202,6 +2427,7 @@ function renderAll() {
   renderAchievements();
   renderResources();
   renderPortfolio();
+  renderBasis();
 }
 
 // Set today's date as default
